@@ -5,11 +5,11 @@ color = sns.color_palette()
 from wordcloud import WordCloud, STOPWORDS
 import pandas as pd
 import plotly.express as px
-import numpy as np
-from PIL import Image
+
 
 df = pd.read_csv('data.csv')  # Read data from csv
 df['Tweet'] = df['Tweet'].str.lower()  # Convert tweets to lower caps
+# df = df.drop_duplicates(subset=['Tweet'], keep='last') # Drop duplicates from tweet column
 print(len(df))
 
 # Creates a histogram based on the number of likes for each tweet
@@ -25,11 +25,11 @@ df_negative = df.loc[df['Emotion'] == "Negative"] # Selecting columns with negat
 
 # Creating a wordcloud with different emotions
 def wordcloud(tweet, title):
-    image = np.array(Image.open('hashtag.png'))
+    # image = np.array(Image.open('hashtag.png'))
     stopwords = set(STOPWORDS)
     stopwords.update(["br", "href"])
     words = " ".join(tweets for tweets in tweet.Tweet)
-    wordcloud = WordCloud(width=1000, height=800, mask=image,
+    wordcloud = WordCloud(width=1000, height=800, 
                         background_color="white", stopwords=stopwords, min_font_size=10).generate(words)
     plt.imshow(wordcloud, interpolation="bilinear")
     plt.axis("off")
