@@ -1,6 +1,5 @@
 import re
 from re import search
-from tkinter.tix import TCL_WINDOW_EVENTS
 import tweepy  # Importing of scraper API
 import pandas as pd  # Pandas for importing data into DF
 from textblob import TextBlob
@@ -18,7 +17,7 @@ auth = tweepy.OAuth1UserHandler(
 )
 
 # Start tweepy
-api = tweepy.API(auth, timeout=60, wait_on_rate_limit= True)  # Maximum response from twitter = 60 seconds
+api = tweepy.API(auth, wait_on_rate_limit= True)  # Maximum response from twitter = 60 seconds
 
 
 # This function searches for users and returns the tweets and information
@@ -56,7 +55,6 @@ def search_results(search, counts):
         columns = ["id","Date Created", "Number of Likes", "Source of Tweet", "Tweet"]
 
         tweets_df = pd.DataFrame(container, columns=columns)
-        tweets_df = tweets_df.drop_duplicates(subset=['Tweet'], keep='last') # Drop duplicates from tweet column
         return(tweets_df)
 
     except BaseException as e:
@@ -105,7 +103,7 @@ def export_csv(data):  # Using pandas to export data to csv
 # profile_data = profile_search("sporeMOH", 200)
 
 # Search_results for "name" & "number of tweets"
-search_data = search_results("healthcare workers", 150)
+search_data = search_results("healthcare workers", 2500)
 search_data['Subjectivity'] = search_data['Tweet'].apply(getSubjectivity)  # Adding new column subjectivity
 search_data['Polarity'] = search_data['Tweet'].apply(popular)  # Adding new column polarity
 
@@ -115,8 +113,8 @@ search_data['Emotion'] = search_data['Polarity'].apply(emotion) # Use polarity t
 
 # Prints output
 # print(profile_data)
-print(len(search_data))
-# print(search_data)
+print(search_data)
+print(search_data)
 
 # Exports out to csv
 export_csv(search_data)
