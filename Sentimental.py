@@ -16,7 +16,7 @@ print(len(df))
 
 # Creates a histogram based on the number of likes for each tweet
 fig = px.histogram(df, x="Emotion", text_auto = True) # Takes data from the column "Number of Likes"
-fig.update_traces(marker_color="blue", textfont_size = 20,
+fig.update_traces(marker_color=["green","blue","red"], textfont_size = 20,
                   marker_line_width=1)
 fig.update_layout(title_text='Polarity of tweets')
 fig.show()
