@@ -7,8 +7,10 @@ import pandas as pd
 import plotly.express as px
 
 
-df = pd.read_csv('data.csv')  # Read data from csv
+df = pd.read_csv('data.csv')  # Read data from csv #twtfile name
 df['Tweet'] = df['Tweet'].str.lower()  # Convert tweets to lower caps
+
+#Filter Positive & Negative words (eg, certain words are guarantee negative etc)
 # df = df.drop_duplicates(subset=['Tweet'], keep='last') # Drop duplicates from tweet column
 print(len(df))
 
@@ -51,3 +53,15 @@ pos = pos.groupby(['Date Created'],as_index=False).count()
 
 pos = pos[['Date Created','id']]
 neg = neg[['Date Created','id']]
+
+#Pie Chart
+plot_size = plt.rcParams["figure.figsize"] 
+print(plot_size[0]) 
+print(plot_size[1])
+
+plot_size[0] = 8
+plot_size[1] = 6
+plt.rcParams["figure.figsize"] = plot_size 
+
+df.value_counts().plot(kind='pie', autopct='%1.0f%%', colors=["red", "yellow", "green"])
+#Filter Positive & Negative words (eg, certain words are guarantee negative etc)
