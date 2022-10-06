@@ -32,7 +32,9 @@ def wordcloud(tweet, title):
     stopwords.update(["br", "href"])
     words = " ".join(tweets for tweets in tweet.Tweet)
     wordcloud = WordCloud(width=1000, height=800, 
-                        background_color="white", stopwords=stopwords, min_font_size=10).generate(words)
+                        background_color="white", 
+                        stopwords=["healthcare workers", "healthcare","never","so","before", "teachers"], #removing certain words from showing in wordcloud
+                        colormap="Blues", min_font_size=10).generate(words)
     plt.imshow(wordcloud, interpolation="bilinear")
     plt.axis("off")
     plt.savefig('wordcloud10.png')
