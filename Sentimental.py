@@ -1,26 +1,24 @@
 from collections import Counter
-from time import strptime
-from tracemalloc import start
-from turtle import title
-from matplotlib.colors import Colormap
 import matplotlib.pyplot as plt
-from numpy import percentile
-from regex import D
 import seaborn as sns
 color = sns.color_palette()
 from wordcloud import WordCloud, STOPWORDS
 import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
 pd.options.mode.chained_assignment = None  # default='warn
 from textblob import TextBlob
+from nltk.stem.snowball import SnowballStemmer
+from nltk.corpus import stopwords
+import spacy
 
 
-def getSubjectivity(text):
+
+
+def getSubjectivity(text): # Returns the subjectivity from the library textblob
     return TextBlob(text).sentiment.subjectivity
 
 
-def getPolarity(text):
+def getPolarity(text): # Returns the polarity from the library textblob
     return TextBlob(text).sentiment.polarity
 
 
@@ -35,9 +33,6 @@ def data_read_clean(df):
 
     rem = r'\b(?:{})\b'.format('|'.join(remove_words)) # Set parameters to remove this list of words from "Tweet" column
     df['Tweet'] = df['Tweet'].str.replace(rem, '') # Apply the removal to the pandas dataframe tweet
-
-    # most_com = Counter(" ".join(df['Tweet']).split()).most_common(10) # Returns the most common words
-    # print(most_com)
 
     df['Subjectivity'] = df['Tweet'].apply(getSubjectivity)  # Adding new column subjectivity from textblob
     df['Polarity'] = df['Tweet'].apply(getPolarity)  # Adding new column Polarity from textblob
@@ -103,10 +98,15 @@ def time_bar(start, end, df): # Graph to show sentiments over time
     plt.show()
 
 
-def scatter_plot(df):
+def scatter_plot(df): # Scatter plot between subjectivity & polarity
     df.plot.scatter(x="Polarity", y="Subjectivity", c="DarkBlue", colormap="viridis")
     plt.show()
     
+
+def most_common(df):
+    most_com = Counter(" ".join(df['Tweet']).split()).most_common(10) # Returns the most common words
+    print(most_com)
+
 
 
 df = data_read_clean(pd.read_csv('data.csv'))  # Read data from csv and drop duplicates from column "Tweet"
@@ -114,14 +114,11 @@ df = data_read_clean(pd.read_csv('data.csv'))  # Read data from csv and drop dup
 
 # pie_chart(df)
 
-# emotion_count = df['Emotion'].value_counts() # Count the occurence of each emotion
-# counts = pd.DataFrame({'FuncGroup' :emotion_count.index, 'Count':emotion_count.values})
-# print(counts) 
-
 # histo(df)
 
 # kernal_graph(df)
 
+# Word Cloud 
 df_positive = df.loc[df['Emotion'] == "Positive"] # Selecting columns with positive emotion
 df_negative = df.loc[df['Emotion'] == "Negative"] # Selecting columns with negative emotion
 def_neutral = df.loc[df['Emotion'] == "Neutral"] # Selecting columns with neutral emotion
@@ -131,4 +128,31 @@ def_neutral = df.loc[df['Emotion'] == "Neutral"] # Selecting columns with neutra
 
 # time_bar('2019-11-12','2019-11-21', df)
 
-scatter_plot(df)
+# scatter_plot(df)
+
+sentences = []
+for word in df['Tweet']:
+    sentences.append(word)
+sentences
+lines = []
+for line in sentences:
+    words = line.split()
+    for w in words:
+        lines.append(w)
+stop_words = set(stopwords.words('english'))
+
+new = []
+for w in lines:
+    if w not in stop_words:
+        new.append(w)
+
+df_count = pd.DataFrame(new)
+print(df_count)
+
+# df_count = df_count[:20]
+# plt.figure(figsize=(10,5))
+# sns.barplot(df_count.values, df_count.index, alpha=0.8)
+# plt.title('Top Words Overall')
+# plt.xlabel('Count of words', fontsize=12)
+# plt.ylabel('Word from Tweet', fontsize=12)
+# plt.show()
