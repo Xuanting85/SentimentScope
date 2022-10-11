@@ -2,6 +2,7 @@ from datetime import datetime
 from time import strptime
 from tracemalloc import start
 from turtle import title
+from matplotlib.colors import Colormap
 import matplotlib.pyplot as plt
 from numpy import percentile
 from regex import D
