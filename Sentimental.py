@@ -1,4 +1,5 @@
 from turtle import title
+from matplotlib.colors import Colormap
 import matplotlib.pyplot as plt
 import seaborn as sns
 color = sns.color_palette()
@@ -21,9 +22,9 @@ fig.update_traces(marker_color="blue", textfont_size = 20,
 fig.update_layout(title_text='Polarity of tweets')
 fig.show()
 
-
 df_positive = df.loc[df['Emotion'] == "Positive"] # Selecting columns with positive emotion
 df_negative = df.loc[df['Emotion'] == "Negative"] # Selecting columns with negative emotion
+df_sentiment = df['Emotion'] # want to classify the pos & neg as 1 grp
 
 # Creating a wordcloud with different emotions
 def wordcloud(tweet, title):
@@ -39,9 +40,9 @@ def wordcloud(tweet, title):
     plt.title(title, size = 20)
     plt.show()
 
-wordcloud_p = wordcloud(df_positive, "Positive Word Cloud")
-wordcloud_n = wordcloud(df_negative, "Negative Word Cloud")
-
+# wordcloud_p = wordcloud(df_positive, "Positive Word Cloud")
+# wordcloud_n = wordcloud(df_negative, "Negative Word Cloud")
+# wordcloud_all = wordcloud(df_sentiment, "All Words Cloud")
 
 # Graph to show sentiments over time
 print(len(df))
@@ -63,5 +64,8 @@ plot_size[0] = 8
 plot_size[1] = 6
 plt.rcParams["figure.figsize"] = plot_size 
 
-df.value_counts().plot(kind='pie', autopct='%1.0f%%', colors=["red", "yellow", "green"])
-#Filter Positive & Negative words (eg, certain words are guarantee negative etc)
+
+
+# df.value_counts().plot.pie()
+df_sentiment.value_counts().plot.pie(y= df_sentiment, subplots=True, figsize =(5,5), colors = ['red', 'pink', 'purple'] )
+plt.show()
