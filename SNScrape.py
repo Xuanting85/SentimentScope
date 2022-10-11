@@ -2,7 +2,8 @@ from attr import attributes
 import snscrape.modules.twitter as sntwitter # Importing of Scraper API
 import re
 import pandas as pd  # Pandas for importing data into DF
-from nltk.sentiment.vader import SentimentIntensityAnalyzer
+from nltk.sentiment.vader import SentimentIntensityAnalyzer # Vader analysis returns the polarity of the comment
+# Eg how neg or pos a comment this and the compound is the overall 
 # nltk.downloader.download('vader_lexicon') # Remember to uncomment this to install lexicon file before running scraper
 
 def search_profile(counts, profiles): # Using Snscrape API to scrape profile data on twitter
