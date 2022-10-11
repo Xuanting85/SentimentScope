@@ -16,7 +16,8 @@ import plotly.graph_objects as go
 def data_read_clean(df):
     df['Tweet'] = df['Tweet'].str.lower()  # Convert tweets to lower caps
     df = df.drop_duplicates(subset=['Tweet'], keep='last') # Drop duplicates from tweet column
-    remove_words = ["healthcare", "Healthcare", "Worker", "worker", "healthcare worker", "workers"] # Specify common words to be removed
+    remove_words = ["healthcare", "Healthcare", "Worker", "worker", "healthcare worker", "workers", "never", "so", "before", 
+    "healthcare workers"] # Specify common words to be removed
     rem = r'\b(?:{})\b'.format('|'.join(remove_words)) # Set parameters to remove this list of words from "Tweet" column
     df['Tweet'].str.replace(rem, '') 
     return df
@@ -25,24 +26,24 @@ def data_read_clean(df):
 
 def pie_chart(df):     # Creates a pie chart to count % of each emotion
     emotions = df['Emotion'].value_counts()
-    emotions.plot.pie(y=emotions, subplots=True, figsize=(5,5),colors=['green','red','blue'])
+    emotions.plot.pie(y=emotions, subplots=True, figsize=(5,5),colors=['green','red','blue'], autopct='%1.0f%%')
     plt.show()
 
     
 def histo(df): # Creates a histogram based on the number of likes for each tweet
     fig = px.histogram(df, x="Emotion", y ="Number of Likes", title="Number of likes for each emotion", width=1200, height=1000) # Takes data from the column "Number of Likes"
     fig.update_traces(textfont_size = 100,
-                    marker_line_width=1)
+                    marker_line_width=1, marker_color=["blue", "red", "green"])
     fig.show()
 
 
-def wordcloud(tweet, title): # Creating a wordcloud with different emotions
+def wordcloud(tweet, title, col): # Creating a wordcloud with different emotions
     # image = np.array(Image.open('hashtag.png'))
     stopwords = set(STOPWORDS)
     stopwords.update(["br", "href"])
     words = " ".join(tweets for tweets in tweet.Tweet)
     wordcloud = WordCloud(width=1000, height=800, 
-                        background_color="white", stopwords=stopwords, min_font_size=15).generate(words)
+                        background_color="white", stopwords=stopwords, min_font_size=15, colormap=col).generate(words)
     plt.imshow(wordcloud, interpolation="bilinear")
     plt.axis("off")
     plt.title(title, size = 20)
@@ -85,15 +86,15 @@ df = data_read_clean(pd.read_csv('data.csv'))  # Read data from csv and drop dup
 # counts = pd.DataFrame({'FuncGroup' :emotion_count.index, 'Count':emotion_count.values})
 # print(counts) 
 
-# histo(df)
+histo(df)
 
 # kernal_graph(df)
 
 df_positive = df.loc[df['Emotion'] == "Positive"] # Selecting columns with positive emotion
 df_negative = df.loc[df['Emotion'] == "Negative"] # Selecting columns with negative emotion
 def_neutral = df.loc[df['Emotion'] == "Neutral"] # Selecting columns with neutral emotion
-# wordcloud_p = wordcloud(df_positive, "Positive Word Cloud")
-# wordcloud_n = wordcloud(df_negative, "Negative Word Cloud")
-# wordcloud_neu = wordcloud(def_neutral, "Neutral Word Cloud")
+# wordcloud_p = wordcloud(df_positive, "Positive Word Cloud", "Greens")
+# wordcloud_n = wordcloud(df_negative, "Negative Word Cloud", "Reds")
+# wordcloud_neu = wordcloud(def_neutral, "Neutral Word Cloud", "Blues")
 
-time_bar('2019-11-12','2019-11-21', df)
+# time_bar('2019-11-12','2019-11-21', df)
