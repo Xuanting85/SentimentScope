@@ -82,18 +82,16 @@ search_data['Tweet'] = search_data['Tweet'].apply(clean_text)  # Cleaning of twe
 search_data['Emotion'] = search_data['Polarity'].apply(emotion) # Use polarity to get the emotion
 
 
-
-
 profile_data['Polarity'] = profile_data['Tweet'].apply(popular)  # Adding new column polarity
 profile_data['Tweet'] = profile_data['Tweet'].apply(clean_text)  # Cleaning of tweets
 # profile_data['Emotion'] = profile_data['Polarity'].apply(emotion) # Use polarity to get the emotion
 
 # Prints output
-# print(search_data)
+print(search_data)
 # print(profile_data)
 
 # Create and export to csv file
-export_csv(search_data)
+# export_csv(search_data)
 
 # Clear csv file
 # clear_csv("data.csv")

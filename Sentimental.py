@@ -1,4 +1,5 @@
 from collections import Counter
+from distutils.command.config import dump_file
 import matplotlib.pyplot as plt
 import seaborn as sns
 color = sns.color_palette()
@@ -7,12 +8,9 @@ import pandas as pd
 import plotly.express as px
 pd.options.mode.chained_assignment = None  # default='warn
 from textblob import TextBlob
-from nltk.stem.snowball import SnowballStemmer
 from nltk.corpus import stopwords
-import spacy
 
-
-
+# The analysis available are piechart / histogram / wordcloud / kernal graph / time graph / scatterplot 
 
 def getSubjectivity(text): # Returns the subjectivity from the library textblob
     return TextBlob(text).sentiment.subjectivity
@@ -103,10 +101,45 @@ def scatter_plot(df): # Scatter plot between subjectivity & polarity
     plt.show()
     
 
-def most_common(df):
-    most_com = Counter(" ".join(df['Tweet']).split()).most_common(10) # Returns the most common words
-    print(most_com)
+def most_common(df): # Barplot to show the count of popular words
+    sentences = [] # Create a new list to store sentences from tweets
+    for word in df['Tweet']:
+        sentences.append(word)
+    sentences
+    # print(sentences[:10])
 
+    lines = []
+    for line in sentences:
+        words = line.split() # Split this sentences up to get each word
+        for w in words:
+            lines.append(w) # Append the words to a new list
+    # print(lines[:10])
+
+    stop_words = set(stopwords.words('english'))
+    print(stop_words)
+    new = []
+    for w in lines:
+        if w not in stop_words: # Remove unwanted words using stoplist
+            new.append(w)
+
+    # print(new[:10])
+
+    df_count = pd.DataFrame(new)
+    # Further removal of punctuations
+    df_count.drop(df_count[df_count[0] == '.'].index, inplace=True)
+    df_count.drop(df_count[df_count[0] == ','].index, inplace=True)
+    df_count.drop(df_count[df_count[0] == '&;'].index, inplace=True)
+    df_count.drop(df_count[df_count[0] == '-'].index, inplace=True)
+    df_count = df_count[0].value_counts() # Count the occurence of each word
+
+
+    df_count = df_count[:20] # Take the first 20 words with the most number of count
+    plt.figure(figsize=(10,5))
+    sns.barplot(df_count.values, df_count.index, alpha=0.8)
+    plt.title('Top Words Overall')
+    plt.xlabel('Count of words', fontsize=12)
+    plt.ylabel('Word from Tweet', fontsize=12)
+    plt.show() 
 
 
 df = data_read_clean(pd.read_csv('data.csv'))  # Read data from csv and drop duplicates from column "Tweet"
@@ -130,29 +163,4 @@ def_neutral = df.loc[df['Emotion'] == "Neutral"] # Selecting columns with neutra
 
 # scatter_plot(df)
 
-sentences = []
-for word in df['Tweet']:
-    sentences.append(word)
-sentences
-lines = []
-for line in sentences:
-    words = line.split()
-    for w in words:
-        lines.append(w)
-stop_words = set(stopwords.words('english'))
-
-new = []
-for w in lines:
-    if w not in stop_words:
-        new.append(w)
-
-df_count = pd.DataFrame(new)
-print(df_count)
-
-# df_count = df_count[:20]
-# plt.figure(figsize=(10,5))
-# sns.barplot(df_count.values, df_count.index, alpha=0.8)
-# plt.title('Top Words Overall')
-# plt.xlabel('Count of words', fontsize=12)
-# plt.ylabel('Word from Tweet', fontsize=12)
-# plt.show()
+# most_common(df)
