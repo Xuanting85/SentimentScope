@@ -17,7 +17,7 @@ print(len(df))
 
 # Creates a histogram based on the number of likes for each tweet
 fig = px.histogram(df, x="Emotion", text_auto = True) # Takes data from the column "Number of Likes"
-fig.update_traces(marker_color="blue", textfont_size = 20,
+fig.update_traces(marker_color=["green","blue","red"], textfont_size = 20,
                   marker_line_width=1)
 fig.update_layout(title_text='Polarity of tweets')
 fig.show()
@@ -33,7 +33,9 @@ def wordcloud(tweet, title):
     stopwords.update(["br", "href"])
     words = " ".join(tweets for tweets in tweet.Tweet)
     wordcloud = WordCloud(width=1000, height=800, 
-                        background_color="white", stopwords=stopwords, min_font_size=10).generate(words)
+                        background_color="white", 
+                        stopwords=["healthcare workers", "healthcare","never","so","before", "teachers"], #removing certain words from showing in wordcloud
+                        colormap="Blues", min_font_size=10).generate(words)
     plt.imshow(wordcloud, interpolation="bilinear")
     plt.axis("off")
     plt.savefig('wordcloud10.png')
