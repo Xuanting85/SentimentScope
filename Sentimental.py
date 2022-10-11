@@ -2,6 +2,7 @@ from collections import Counter
 from time import strptime
 from tracemalloc import start
 from turtle import title
+from matplotlib.colors import Colormap
 import matplotlib.pyplot as plt
 from numpy import percentile
 from regex import D
@@ -12,17 +13,34 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 pd.options.mode.chained_assignment = None  # default='warn
+from textblob import TextBlob
+
+
+def getSubjectivity(text):
+    return TextBlob(text).sentiment.subjectivity
+
+
+def getPolarity(text):
+    return TextBlob(text).sentiment.polarity
+
 
 def data_read_clean(df):
+    cols = [0,1,6] # Specficy first 2 columns to drop
+    df = df.drop(df.columns[cols], axis=1) # Drop first 2 columns which are unncessary
     df['Tweet'] = df['Tweet'].str.lower()  # Convert tweets to lower caps
     df = df.drop_duplicates(subset=['Tweet'], keep='last') # Drop duplicates from tweet column
+
     remove_words = ["healthcare", "Healthcare", "Worker", "worker", "healthcare worker", "workers", "never", "so", "before", 
-    "healthcare workers", "the", "to", "and", "of", "for", "a", "in", "is", "are", "that", "on", "you", "with", "amp"] # Specify common words to be removed
+    "healthcare workers", "the", "to", "and", "of", "for", "a", "in", "is", "are", "that", "on", "you", "with", "amp"] # Specify common words to be removed4
+
     rem = r'\b(?:{})\b'.format('|'.join(remove_words)) # Set parameters to remove this list of words from "Tweet" column
     df['Tweet'] = df['Tweet'].str.replace(rem, '') # Apply the removal to the pandas dataframe tweet
 
     # most_com = Counter(" ".join(df['Tweet']).split()).most_common(10) # Returns the most common words
     # print(most_com)
+
+    df['Subjectivity'] = df['Tweet'].apply(getSubjectivity)  # Adding new column subjectivity from textblob
+    df['Polarity'] = df['Tweet'].apply(getPolarity)  # Adding new column Polarity from textblob
     return df
 
 
@@ -30,7 +48,11 @@ def data_read_clean(df):
 
 def pie_chart(df):     # Creates a pie chart to count % of each emotion
     emotions = df['Emotion'].value_counts()
-    emotions.plot.pie(y=emotions, subplots=True, figsize=(5,5),colors=['green','red','blue'], autopct='%1.0f%%')
+    wp={'linewidth':2, 'edgecolor': 'black'}
+    explode = (0.1,0.1,0.1)
+    emotions.plot.pie(y=emotions, subplots=True, figsize=(5,5),colors=['green','red','blue'], autopct='%1.0f%%',shadow = True, wedgeprops=wp
+    ,explode = explode, label='')
+    plt.title("Polarity Distribution")
     plt.show()
 
     
@@ -81,6 +103,12 @@ def time_bar(start, end, df): # Graph to show sentiments over time
     plt.show()
 
 
+def scatter_plot(df):
+    df.plot.scatter(x="Polarity", y="Subjectivity", c="DarkBlue", colormap="viridis")
+    plt.show()
+    
+
+
 df = data_read_clean(pd.read_csv('data.csv'))  # Read data from csv and drop duplicates from column "Tweet"
 
 
@@ -103,3 +131,4 @@ def_neutral = df.loc[df['Emotion'] == "Neutral"] # Selecting columns with neutra
 
 # time_bar('2019-11-12','2019-11-21', df)
 
+scatter_plot(df)
