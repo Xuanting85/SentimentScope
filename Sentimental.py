@@ -1,4 +1,4 @@
-from datetime import datetime
+from collections import Counter
 from time import strptime
 from tracemalloc import start
 from turtle import title
@@ -11,16 +11,20 @@ from wordcloud import WordCloud, STOPWORDS
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-
+pd.options.mode.chained_assignment = None  # default='warn
 
 def data_read_clean(df):
     df['Tweet'] = df['Tweet'].str.lower()  # Convert tweets to lower caps
     df = df.drop_duplicates(subset=['Tweet'], keep='last') # Drop duplicates from tweet column
     remove_words = ["healthcare", "Healthcare", "Worker", "worker", "healthcare worker", "workers", "never", "so", "before", 
-    "healthcare workers"] # Specify common words to be removed
+    "healthcare workers", "the", "to", "and", "of", "for", "a", "in", "is", "are", "that", "on", "you", "with", "amp"] # Specify common words to be removed
     rem = r'\b(?:{})\b'.format('|'.join(remove_words)) # Set parameters to remove this list of words from "Tweet" column
-    df['Tweet'].str.replace(rem, '') 
+    df['Tweet'] = df['Tweet'].str.replace(rem, '') # Apply the removal to the pandas dataframe tweet
+
+    # most_com = Counter(" ".join(df['Tweet']).split()).most_common(10) # Returns the most common words
+    # print(most_com)
     return df
+
 
 # Functions below perform visualization with different charts / graphs
 
@@ -43,7 +47,7 @@ def wordcloud(tweet, title, col): # Creating a wordcloud with different emotions
     stopwords.update(["br", "href"])
     words = " ".join(tweets for tweets in tweet.Tweet)
     wordcloud = WordCloud(width=1000, height=800, 
-                        background_color="white", stopwords=stopwords, min_font_size=15, colormap=col).generate(words)
+                        background_color="white", stopwords=stopwords, min_font_size=10, colormap=col).generate(words)
     plt.imshow(wordcloud, interpolation="bilinear")
     plt.axis("off")
     plt.title(title, size = 20)
@@ -86,7 +90,7 @@ df = data_read_clean(pd.read_csv('data.csv'))  # Read data from csv and drop dup
 # counts = pd.DataFrame({'FuncGroup' :emotion_count.index, 'Count':emotion_count.values})
 # print(counts) 
 
-histo(df)
+# histo(df)
 
 # kernal_graph(df)
 
@@ -98,3 +102,4 @@ def_neutral = df.loc[df['Emotion'] == "Neutral"] # Selecting columns with neutra
 # wordcloud_neu = wordcloud(def_neutral, "Neutral Word Cloud", "Blues")
 
 # time_bar('2019-11-12','2019-11-21', df)
+
