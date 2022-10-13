@@ -72,7 +72,7 @@ def clear_csv(file):
 
 
 
-search_data = search_results(10000, "healthcare workers since:2019-01-01 until:2020-01-01")
+search_data = search_results(10, "healthcare workers since:2019-01-01 until:2020-01-01")
 profile_data = search_profile(0, 'from:sporeMOH')
 
 # Applying function to extract the polarity / subjectivity and find the emotion of different tweets
@@ -91,7 +91,7 @@ print(search_data)
 # print(profile_data)
 
 # Create and export to csv file
-export_csv(search_data)
+# export_csv(search_data)
 
 # Clear csv file
 # clear_csv("data.csv")
