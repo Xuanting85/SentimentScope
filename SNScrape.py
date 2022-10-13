@@ -91,7 +91,7 @@ print(search_data)
 # print(profile_data)
 
 # Create and export to csv file
-# export_csv(search_data)
+export_csv(search_data)
 
 # Clear csv file
 # clear_csv("data.csv")
