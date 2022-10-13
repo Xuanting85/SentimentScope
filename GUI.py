@@ -90,7 +90,7 @@ def getPolarity(text): # Returns the polarity from the library textblob
 
 
 def data_read_clean(df): # Perform further data cleaning
-    cols = [0,1,6] # Specficy first 2 columns to drop
+    cols = [0] # Specficy first column to drop
     df = df.drop(df.columns[cols], axis=1) # Drop first 2 columns which are unncessary
     df['Tweet'] = df['Tweet'].str.lower()  # Convert tweets to lower caps
     df = df.drop_duplicates(subset=['Tweet'], keep='last') # Drop duplicates from tweet column
@@ -185,7 +185,7 @@ def most_common(df): # Barplot to show the count of popular words
     # print(lines[:10])
 
     stop_words = set(stopwords.words('english'))
-    print(stop_words)
+    # print(stop_words)
     new = []
     for w in lines:
         if w not in stop_words: # Remove unwanted words using stoplist
@@ -213,10 +213,13 @@ def most_common(df): # Barplot to show the count of popular words
 
 def open_data_window(df):
     df['Tweet'] = df['Tweet'].apply(clean_text)  # Cleaning of tweets
-    data_read_clean(df)  # Read data from csv and drop duplicates from column "Tweet"
+    print(df)
+    df = data_read_clean(df)  # Read data from csv and drop duplicates from column "Tweet"
+    print(df)
     layout = [[sg.Text("Data Analysis Window\n\nPlease select one of the analysis below", key="new")],
     [sg.Button("Piechart"),sg.Button("Histogram"), sg.Button("Kernal Graph")],
-    [sg.Button("Positive Word Cloud"), sg.Button("Negative Word Cloud"), sg.Button("Neutral Word Cloud")]]
+    [sg.Button("Positive Word Cloud"), sg.Button("Negative Word Cloud"), sg.Button("Neutral Word Cloud")],
+    [sg.Button("Scatter"), sg.Button("Time Graph"), sg.Button("Most Common Words")]]
     window = sg.Window("Second Window", layout, modal=True) # Unable to interact with main window until you close second window
     while True:
         event, values = window.read()
@@ -240,11 +243,22 @@ def open_data_window(df):
         elif event == "Neutral Word Cloud":
             def_neutral = df.loc[df['Emotion'] == "Neutral"] # Selecting columns with neutral emotion
             wordcloud(def_neutral, "Neutral Word Cloud", "Blues")
+
+        elif event == "Scatter":
+            print(df)
+            scatter_plot(df)
+
+        elif event == "Time Graph":
+            time_bar('2020-01-01','2021-01-01', df)
+
+        elif event == "Most Common Words":
+            most_common(df)
+
     window.close()
 
-date_time = "since:2020-02-01 until:2020-05-01"
+date_time = "since:2020-02-01 until:2020-05-01" # Scrape from Feb to May 2020
 list1 = ["healthcare workers ", "covid ", "nurse ", "hospital ", "doctor "]
-layout = [[sg.Text('FORMAT \n(keyword since:yyyy-mm-dd until: yyyy-mm-dd)')],
+layout = [[sg.Text('SCRAPER \nPlease select the keyword to scrape from twitter')],
  [sg.Text('Scraper', size =(15, 2)), sg.DD(list1, key = "key_word")],
  [sg.Text('Amount to Scrape', size =(15, 2)), sg.InputText(key = "number")],
     [sg.Exit(), sg.Button("Scrape Data"), sg.Button("Export to CSV")],
@@ -263,7 +277,6 @@ while True:
             search_data = search_results(int(values["number"]), values["key_word"]+ date_time)
             search_data['Polarity'] = search_data['Tweet'].apply(popular)  # Adding new column polarity using VaderSentiment Analysis
             search_data['Emotion'] = search_data['Polarity'].apply(emotion) # Use polarity to get the emotion
-            print(search_data)
             if search_data.empty:
                 sg.popup_auto_close("Scrape unsuccessful")
             elif not search_data.empty:
