@@ -1,5 +1,5 @@
 import PySimpleGUI as sg
-from attr import attributes
+import attributes
 import snscrape.modules.twitter as sntwitter # Importing of Scraper API
 import re
 import pandas as pd  # Pandas for importing data into DF
@@ -16,6 +16,7 @@ pd.options.mode.chained_assignment = None  # default='warn
 from textblob import TextBlob
 from nltk.corpus import stopwords
 # Eg how neg or pos a comment this and the compound is the overall 
+
 # nltk.downloader.download('vader_lexicon') # Remember to uncomment this to install lexicon file before running scraper
 
 def search_profile(counts, profiles): # Using Snscrape API to scrape profile data on twitter
@@ -211,7 +212,7 @@ def most_common(df): # Barplot to show the count of popular words
     plt.ylabel('Word from Tweet', fontsize=12)
     plt.show() 
 
-
+ 
 def open_data_window(df):
     df['Tweet'] = df['Tweet'].apply(clean_text)  # Cleaning of tweets
     data_read_clean(df)  # Read data from csv and drop duplicates from column "Tweet"
@@ -242,10 +243,10 @@ def open_data_window(df):
             def_neutral = df.loc[df['Emotion'] == "Neutral"] # Selecting columns with neutral emotion
             wordcloud(def_neutral, "Neutral Word Cloud", "Blues")
     window.close()
-
-
+date = "since:2020-02-01 until:2020-05-01"
+list1 = ["healthcare workers " + date, "covid " + date, "nurse " + date, "hospital " + date, "doctor " + date]
 layout = [[sg.Text('FORMAT \n(keyword since:yyyy-mm-dd until: yyyy-mm-dd)')],
- [sg.Text('Scraper', size =(15, 2)), sg.InputText(key = "key_word")],
+ [sg.Text('Scraper', size =(15, 2)), sg.DD(list1,key = "key_word")],
  [sg.Text('Amount to Scrape', size =(15, 2)), sg.InputText(key = "number")],
     [sg.Exit(), sg.Button("Scrape Data"), sg.Button("Export to CSV")],
     [sg.Button("Data Analysis")]]
