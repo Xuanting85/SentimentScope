@@ -52,7 +52,7 @@ def pie_chart(df):     # Creates a pie chart to count % of each emotion
 def histo(df): # Creates a histogram based on the number of likes for each tweet
     fig = px.histogram(df, x="Emotion", y ="Number of Likes", title="Number of likes for each emotion", width=1200, height=1000) # Takes data from the column "Number of Likes"
     fig.update_traces(textfont_size = 100,
-                    marker_line_width=1, marker_color=["blue", "red", "green"])
+                    marker_line_width=1, marker_color=["green", "red", "blue"])
     fig.show()
 
 
@@ -75,9 +75,9 @@ def kernal_graph(df):# Kernal distribution graph
     num_neu = df[df['Emotion']=='Neutral']['Tweet'].apply(lambda x: len(x.split()))
     num_pos = df[df['Emotion']=='Positive']['Tweet'].apply(lambda x: len(x.split()))
     plt.figure(figsize=(12,6))
-    sns.kdeplot(num_neg, shade=True, color = 'r').set_title('Distribution of number of words')
-    sns.kdeplot(num_neu, shade=True, color = 'y')
-    sns.kdeplot(num_pos, shade=True, color = 'b')
+    sns.kdeplot(num_neg, fill=True, color = 'r').set_title('Distribution of number of words')
+    sns.kdeplot(num_neu, fill=True, color = 'b')
+    sns.kdeplot(num_pos, fill=True, color = 'g')
 
     plt.legend(labels=['Negative', 'Neutral','Positive'])
     plt.show()
