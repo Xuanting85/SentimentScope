@@ -80,9 +80,14 @@ def plot_confusion_matrix(y_test, y_predicted, title='Confusion Matrix'):
     plt.title(title)
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
+    plt.show()
 
 plot_confusion_matrix(y_test, y_predicted_lr)
 
+def tokenize(d):
+    return word_tokenize(d)
 
-w2v = Word2Vec(sentences = np.array(df).tolist(), window = 3, vector_size = 100, min_count = 5, workers = 4, sg = 1)
-w2v.wv.most_similar('how')
+texts_w2v = df.Tweet.apply(tokenize).to_list()
+
+w2v = Word2Vec(sentences = texts_w2v, window = 3, vector_size = 100, min_count = 5, workers = 4, sg = 1)
+print(w2v.wv.doesnt_match("comfortable bad good well".split()))
