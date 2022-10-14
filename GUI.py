@@ -15,6 +15,7 @@ pd.options.mode.chained_assignment = None  # default='warn
 from textblob import TextBlob
 from nltk.corpus import stopwords
 # Eg how neg or pos a comment this and the compound is the overall 
+
 # nltk.downloader.download('vader_lexicon') # Remember to uncomment this to install lexicon file before running scraper
 
 def search_profile(counts, profiles): # Using Snscrape API to scrape profile data on twitter
@@ -90,7 +91,7 @@ def getPolarity(text): # Returns the polarity from the library textblob
 
 
 def data_read_clean(df): # Perform further data cleaning
-    cols = [0,1,6] # Specficy first 2 columns to drop
+    cols = [0] # Specficy first column to drop
     df = df.drop(df.columns[cols], axis=1) # Drop first 2 columns which are unncessary
     df['Tweet'] = df['Tweet'].str.lower()  # Convert tweets to lower caps
     df = df.drop_duplicates(subset=['Tweet'], keep='last') # Drop duplicates from tweet column
@@ -185,7 +186,7 @@ def most_common(df): # Barplot to show the count of popular words
     # print(lines[:10])
 
     stop_words = set(stopwords.words('english'))
-    print(stop_words)
+    # print(stop_words)
     new = []
     for w in lines:
         if w not in stop_words: # Remove unwanted words using stoplist
@@ -211,13 +212,16 @@ def most_common(df): # Barplot to show the count of popular words
     plt.show() 
 
 
-def open_data_window(df):
+def open_data_window(df): # Open window for data analysis
     df['Tweet'] = df['Tweet'].apply(clean_text)  # Cleaning of tweets
-    data_read_clean(df)  # Read data from csv and drop duplicates from column "Tweet"
-    layout = [[sg.Text("Data Analysis Window\n\nPlease select one of the analysis below", key="new")],
+    df = data_read_clean(df)  # Read data from csv and drop duplicates from column "Tweet"
+
+    layout = [[sg.Text("Data Analysis Window\n\nPlease select one of the analysis below :", font=('_20'))], # Defining the buttons and layout
     [sg.Button("Piechart"),sg.Button("Histogram"), sg.Button("Kernal Graph")],
-    [sg.Button("Positive Word Cloud"), sg.Button("Negative Word Cloud"), sg.Button("Neutral Word Cloud")]]
-    window = sg.Window("Second Window", layout, modal=True) # Unable to interact with main window until you close second window
+    [sg.Button("Positive Word Cloud"), sg.Button("Negative Word Cloud"), sg.Button("Neutral Word Cloud")],
+    [sg.Button("Scatter"), sg.Button("Time Graph"), sg.Button("Most Common Words")]]
+
+    window = sg.Window("Analysis", layout, modal=True, size=(600,200)) # Unable to interact with main window until you close second window
     while True:
         event, values = window.read()
         if event == "Exit" or event == sg.WIN_CLOSED:
@@ -240,30 +244,59 @@ def open_data_window(df):
         elif event == "Neutral Word Cloud":
             def_neutral = df.loc[df['Emotion'] == "Neutral"] # Selecting columns with neutral emotion
             wordcloud(def_neutral, "Neutral Word Cloud", "Blues")
+
+        elif event == "Scatter":
+            scatter_plot(df)
+
+        elif event == "Time Graph":
+            time_bar('2020-01-01','2021-01-01', df)
+
+        elif event == "Most Common Words":
+            most_common(df)
+
     window.close()
 
-date_time = "since:2020-02-01 until:2020-05-01"
-list1 = ["healthcare workers ", "covid ", "nurse ", "hospital ", "doctor "]
-layout = [[sg.Text('FORMAT \n(keyword since:yyyy-mm-dd until: yyyy-mm-dd)')],
- [sg.Text('Scraper', size =(15, 2)), sg.DD(list1, key = "key_word")],
- [sg.Text('Amount to Scrape', size =(15, 2)), sg.InputText(key = "number")],
+
+def open_data_frame(df): # Open window for to view data frame
+    data_list = df.values.tolist() # Converting data frame back to list
+    # print(data_list)
+    layout = [[sg.Text("Scraped Data Frame")],
+    [sg.Table(values=data_list, headings=list_dataframe, max_col_width=35,
+    auto_size_columns=True,display_row_numbers=True,justification="right",
+    num_rows=10, key='-TABLE-',
+    row_height=35)]]
+    
+    window = sg.Window("Data Frame", layout, modal=True, resizable=True)
+    choice = None
+    while True:
+        event, values = window.read()
+        if event == "Exit" or event == sg.WIN_CLOSED:
+            break
+        
+    window.close()
+
+date_time = "since:2020-02-01 until:2020-05-01" # Scrape from Feb to May 2020
+list_keyword = ["healthcare workers ", "covid ", "nurse ", "hospital ", "doctor "] # List of keywords
+list_dataframe = ["User", "Date Created", "Number of Likes", "Source of Tweet", "Tweet", "Polarity", "Emotion"] # Headers for the dataframe
+
+layout = [[sg.Text('Please select the Keyword & Amount to scrape from twitter\n\n', font='_25')],
+ [sg.Text('Keyword :', font="_15"), sg.DD(list_keyword, key = "key_word", size=(50,50))],
+ [sg.Text(' Amount :', font="_15"), sg.InputText(key = "number", size=(20,50))],
     [sg.Exit(), sg.Button("Scrape Data"), sg.Button("Export to CSV")],
-    [sg.Button("Data Analysis")]]
+    [sg.Button("Data Analysis"), sg.Button("Data Frame")]]
 
 
-window = sg.Window("Python Analysis", layout)
+window = sg.Window("Python Analysis", layout, size=(600,250), resizable=True)
 
 while True:
     try:
         event, values = window.read()
-        # search_data = pd.DataFrame()
         if event in (sg.WINDOW_CLOSED, "Exit"):
             break
         elif event == "Scrape Data": # Scrapes data and stores it in search_data
             search_data = search_results(int(values["number"]), values["key_word"]+ date_time)
             search_data['Polarity'] = search_data['Tweet'].apply(popular)  # Adding new column polarity using VaderSentiment Analysis
             search_data['Emotion'] = search_data['Polarity'].apply(emotion) # Use polarity to get the emotion
-            print(search_data)
             if search_data.empty:
                 sg.popup_auto_close("Scrape unsuccessful")
             elif not search_data.empty:
@@ -280,6 +313,9 @@ while True:
 
         if event == "Data Analysis": # Data must be scraped first before Data Analysis can be opened
             open_data_window(search_data)
+
+        if event == "Data Frame":
+            open_data_frame(search_data)
     except:
         sg.popup_auto_close("Error encountered, please try again") 
 
