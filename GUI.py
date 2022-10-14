@@ -216,12 +216,12 @@ def open_data_window(df): # Open window for data analysis
     df['Tweet'] = df['Tweet'].apply(clean_text)  # Cleaning of tweets
     df = data_read_clean(df)  # Read data from csv and drop duplicates from column "Tweet"
 
-    layout = [[sg.Text("Data Analysis Window\n\nPlease select one of the analysis below")], # Defining the buttons and layout
+    layout = [[sg.Text("Data Analysis Window\n\nPlease select one of the analysis below :", font=('_20'))], # Defining the buttons and layout
     [sg.Button("Piechart"),sg.Button("Histogram"), sg.Button("Kernal Graph")],
     [sg.Button("Positive Word Cloud"), sg.Button("Negative Word Cloud"), sg.Button("Neutral Word Cloud")],
     [sg.Button("Scatter"), sg.Button("Time Graph"), sg.Button("Most Common Words")]]
 
-    window = sg.Window("Analysis", layout, modal=True) # Unable to interact with main window until you close second window
+    window = sg.Window("Analysis", layout, modal=True, size=(600,200)) # Unable to interact with main window until you close second window
     while True:
         event, values = window.read()
         if event == "Exit" or event == sg.WIN_CLOSED:
@@ -246,7 +246,6 @@ def open_data_window(df): # Open window for data analysis
             wordcloud(def_neutral, "Neutral Word Cloud", "Blues")
 
         elif event == "Scatter":
-            print(df)
             scatter_plot(df)
 
         elif event == "Time Graph":
@@ -267,7 +266,7 @@ def open_data_frame(df): # Open window for to view data frame
     num_rows=10, key='-TABLE-',
     row_height=35)]]
     
-    window = sg.Window("Data Frame", layout, modal=True)
+    window = sg.Window("Data Frame", layout, modal=True, resizable=True)
     choice = None
     while True:
         event, values = window.read()
@@ -280,14 +279,14 @@ date_time = "since:2020-02-01 until:2020-05-01" # Scrape from Feb to May 2020
 list_keyword = ["healthcare workers ", "covid ", "nurse ", "hospital ", "doctor "] # List of keywords
 list_dataframe = ["User", "Date Created", "Number of Likes", "Source of Tweet", "Tweet", "Polarity", "Emotion"] # Headers for the dataframe
 
-layout = [[sg.Text('SCRAPER \nPlease select the keyword to scrape from twitter')],
- [sg.Text('Scraper', size =(15, 2)), sg.DD(list_keyword, key = "key_word")],
- [sg.Text('Amount to Scrape', size =(15, 2)), sg.InputText(key = "number")],
+layout = [[sg.Text('Please select the Keyword & Amount to scrape from twitter\n\n', font='_25')],
+ [sg.Text('Keyword :', font="_15"), sg.DD(list_keyword, key = "key_word", size=(50,50))],
+ [sg.Text(' Amount :', font="_15"), sg.InputText(key = "number", size=(20,50))],
     [sg.Exit(), sg.Button("Scrape Data"), sg.Button("Export to CSV")],
     [sg.Button("Data Analysis"), sg.Button("Data Frame")]]
 
 
-window = sg.Window("Python Analysis", layout)
+window = sg.Window("Python Analysis", layout, size=(600,250), resizable=True)
 
 while True:
     try:
