@@ -3,8 +3,6 @@ import snscrape.modules.twitter as sntwitter # Importing of Scraper API
 import re
 import pandas as pd  # Pandas for importing data into DF
 from nltk.sentiment.vader import SentimentIntensityAnalyzer # Vader analysis returns the polarity of the comment
-from collections import Counter
-from distutils.command.config import dump_file
 import matplotlib.pyplot as plt
 import seaborn as sns
 color = sns.color_palette()
@@ -13,11 +11,14 @@ import pandas as pd
 import plotly.express as px
 pd.options.mode.chained_assignment = None  # default='warn
 from textblob import TextBlob
-from nltk.corpus import stopwords
+from nltk.corpus import stopwords as sp
+from setuptools import _distutils
+# nltk.download('stopwords')
 # Eg how neg or pos a comment this and the compound is the overall 
 
 # nltk.downloader.download('vader_lexicon') # Remember to uncomment this to install lexicon file before running scraper
 
+stop_words = set(sp.words('english'))
 def search_profile(counts, profiles): # Using Snscrape API to scrape profile data on twitter
     attributes_container = []
     for i,tweet in enumerate(sntwitter.TwitterSearchScraper(profiles).get_items()):
@@ -102,8 +103,6 @@ def data_read_clean(df): # Perform further data cleaning
     rem = r'\b(?:{})\b'.format('|'.join(remove_words)) # Set parameters to remove this list of words from "Tweet" column
     df['Tweet'] = df['Tweet'].str.replace(rem, '') # Apply the removal to the pandas dataframe tweet
 
-    df['Subjectivity'] = df['Tweet'].apply(getSubjectivity)  # Adding new column subjectivity from textblob
-    df['Polarity'] = df['Tweet'].apply(getPolarity)  # Adding new column Polarity from textblob
     return df
 
 
@@ -128,11 +127,9 @@ def histo(df): # Creates a histogram based on the number of likes for each tweet
 
 def wordcloud(tweet, title, col): # Creating a wordcloud with different emotions
     # image = np.array(Image.open('hashtag.png'))
-    stopwords = set(STOPWORDS)
-    stopwords.update(["br", "href"])
     words = " ".join(tweets for tweets in tweet.Tweet)
     wordcloud = WordCloud(width=1000, height=800, 
-                        background_color="white", stopwords=stopwords, min_font_size=10, colormap=col).generate(words)
+                        background_color="white",min_font_size=10, colormap=col, stopwords=None).generate(words)
     plt.imshow(wordcloud, interpolation="bilinear")
     plt.axis("off")
     plt.title(title, size = 20)
@@ -185,16 +182,20 @@ def most_common(df): # Barplot to show the count of popular words
             lines.append(w) # Append the words to a new list
     # print(lines[:10])
 
-    stop_words = set(stopwords.words('english'))
     # print(stop_words)
     new = []
     for w in lines:
         if w not in stop_words: # Remove unwanted words using stoplist
             new.append(w)
 
+    new1 = []
+    for f in new:
+        if f not in list_keyword:
+            new1.append(f)
+
     # print(new[:10])
 
-    df_count = pd.DataFrame(new)
+    df_count = pd.DataFrame(new1)
     # Further removal of punctuations
     df_count.drop(df_count[df_count[0] == '.'].index, inplace=True)
     df_count.drop(df_count[df_count[0] == ','].index, inplace=True)
@@ -215,20 +216,29 @@ def most_common(df): # Barplot to show the count of popular words
 def open_data_window(df): # Open window for data analysis
     df['Tweet'] = df['Tweet'].apply(clean_text)  # Cleaning of tweets
     df = data_read_clean(df)  # Read data from csv and drop duplicates from column "Tweet"
+    df['Subjectivity'] = df['Tweet'].apply(getSubjectivity)  # Adding new column subjectivity from textblob
+    df['Polarity'] = df['Tweet'].apply(getPolarity)  # Adding new column Polarity from textblob
+    print("Cleaning text")
+    print(df) # Show the new data after cleaning
 
-    layout = [[sg.Text("Data Analysis Window\n\nPlease select one of the analysis below :", font=('_20'))], # Defining the buttons and layout
+    # Defining the buttons and layout
+    layout = [[sg.Text("Data Analysis Window\n\nPlease select one of the analysis below :", font=('_20'))], 
     [sg.Button("Piechart"),sg.Button("Histogram"), sg.Button("Kernal Graph")],
     [sg.Button("Positive Word Cloud"), sg.Button("Negative Word Cloud"), sg.Button("Neutral Word Cloud")],
-    [sg.Button("Scatter"), sg.Button("Time Graph"), sg.Button("Most Common Words")]]
+    [sg.Button("Scatter", key="scatter"), sg.Button("Time Graph"), sg.Button("Most Common Words")]]
 
     window = sg.Window("Analysis", layout, modal=True, size=(600,200)) # Unable to interact with main window until you close second window
     while True:
         event, values = window.read()
         if event == "Exit" or event == sg.WIN_CLOSED:
             break
-
-        elif event == "Piechart":
+        
+        # Setting the functionality of each button
+        elif event == "Piechart": 
             pie_chart(df)
+        
+        elif event == "scatter":
+            scatter_plot(df)
 
         elif event == "Histogram":
             histo(df)
@@ -245,11 +255,8 @@ def open_data_window(df): # Open window for data analysis
             def_neutral = df.loc[df['Emotion'] == "Neutral"] # Selecting columns with neutral emotion
             wordcloud(def_neutral, "Neutral Word Cloud", "Blues")
 
-        elif event == "Scatter":
-            scatter_plot(df)
-
         elif event == "Time Graph":
-            time_bar('2020-01-01','2021-01-01', df)
+            time_bar('2019-01-01','2022-01-01', df)
 
         elif event == "Most Common Words":
             most_common(df)
@@ -278,15 +285,20 @@ def open_data_frame(df): # Open window for to view data frame
 date_time = "since:2020-02-01 until:2020-05-01" # Scrape from Feb to May 2020
 list_keyword = ["healthcare workers ", "covid ", "nurse ", "hospital ", "doctor "] # List of keywords
 list_dataframe = ["User", "Date Created", "Number of Likes", "Source of Tweet", "Tweet", "Polarity", "Emotion"] # Headers for the dataframe
+list_yearfrom = ["2019","2020","2021","2022"] # Range of years
+list_monthfrom = ["01","02","03","04","05","06","07","08","09","10","11","12"] # Range of months
 
-layout = [[sg.Text('Please select the Keyword & Amount to scrape from twitter\n\n', font='_25')],
+layout = [[sg.Text('Please select the Keyword / Date / Amount to scrape from twitter\n\n', font='_25')],
  [sg.Text('Keyword :', font="_15"), sg.DD(list_keyword, key = "key_word", size=(50,50))],
- [sg.Text(' Amount :', font="_15"), sg.InputText(key = "number", size=(20,50))],
+ [sg.Text('Date from :', font='_15'), sg.DD(list_yearfrom, key = "year_start", size=(10,10)), sg.DD(list_monthfrom, key = "month_start", size=(10,10))
+ ,sg.Text('    Date Until :', font='_15'), sg.DD(list_yearfrom, key = "year_end", size=(10,10)), sg.DD(list_monthfrom, key = "month_end", size=(10,10))],
+
+ [sg.Text('Amount :', font="_15"), sg.InputText(key = "number", size=(20,50))],
     [sg.Exit(), sg.Button("Scrape Data"), sg.Button("Export to CSV")],
     [sg.Button("Data Analysis"), sg.Button("Data Frame")]]
 
 
-window = sg.Window("Python Analysis", layout, size=(600,250), resizable=True)
+window = sg.Window("Python Analysis", layout, size=(700,250), resizable=True)
 
 while True:
     try:
@@ -294,7 +306,9 @@ while True:
         if event in (sg.WINDOW_CLOSED, "Exit"):
             break
         elif event == "Scrape Data": # Scrapes data and stores it in search_data
-            search_data = search_results(int(values["number"]), values["key_word"]+ date_time)
+            search_data = search_results(int(values["number"]), values["key_word"]+ "since:" + values["year_start"] + "-" + values["month_start"]+ "-" + "01" + 
+            " until:" + values["year_end"] + "-" + values["month_end"] + "-" + "01") # Takes user-input for time / keyword and amount
+
             search_data['Polarity'] = search_data['Tweet'].apply(popular)  # Adding new column polarity using VaderSentiment Analysis
             search_data['Emotion'] = search_data['Polarity'].apply(emotion) # Use polarity to get the emotion
             if search_data.empty:
@@ -315,7 +329,7 @@ while True:
             open_data_window(search_data)
 
         if event == "Data Frame":
-            open_data_frame(search_data)
+            open_data_frame(search_data) # Function to display data
     except:
         sg.popup_auto_close("Error encountered, please try again") 
 
