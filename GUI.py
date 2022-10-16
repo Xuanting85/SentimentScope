@@ -1,3 +1,4 @@
+from platform import machine
 import PySimpleGUI as sg
 import snscrape.modules.twitter as sntwitter # Importing of Scraper API
 import re
@@ -6,13 +7,17 @@ from nltk.sentiment.vader import SentimentIntensityAnalyzer # Vader analysis ret
 import matplotlib.pyplot as plt
 import seaborn as sns
 color = sns.color_palette()
+import warnings
+warnings.filterwarnings('ignore')
 from wordcloud import WordCloud, STOPWORDS
 import pandas as pd
 import plotly.express as px
 pd.options.mode.chained_assignment = None  # default='warn
 from textblob import TextBlob
 from nltk.corpus import stopwords as sp
-from setuptools import _distutils
+from nltk.tokenize import word_tokenize
+from gensim.models import Word2Vec
+# nltk.download("punkt")
 # nltk.download('stopwords')
 # Eg how neg or pos a comment this and the compound is the overall 
 
@@ -105,6 +110,9 @@ def data_read_clean(df): # Perform further data cleaning
 
     return df
 
+
+def tokenize(d):
+    return word_tokenize(d)
 
 # Functions below perform visualization with different charts / graphs
 
@@ -266,11 +274,11 @@ def open_data_window(df): # Open window for data analysis
 
 def open_data_frame(df): # Open window for to view data frame
     data_list = df.values.tolist() # Converting data frame back to list
-    # print(data_list)
+    print(data_list)
     layout = [[sg.Text("Scraped Data Frame")],
     [sg.Table(values=data_list, headings=list_dataframe, max_col_width=35,
     auto_size_columns=True,display_row_numbers=True,justification="right",
-    num_rows=10, key='-TABLE-',
+    num_rows=20, key='-TABLE-',
     row_height=35)]]
     
     window = sg.Window("Data Frame", layout, modal=True, resizable=True)
@@ -282,20 +290,61 @@ def open_data_frame(df): # Open window for to view data frame
         
     window.close()
 
-date_time = "since:2020-02-01 until:2020-05-01" # Scrape from Feb to May 2020
-list_keyword = ["healthcare workers ", "covid ", "nurse ", "hospital ", "doctor "] # List of keywords
+
+def similar_dataframe(lst):
+    print(lst)
+    layout = [[sg.Text("Similar Words")],
+    [sg.Table(values=lst, headings=word_list, max_col_width=35,
+    auto_size_columns=True,display_row_numbers=True,justification="right",
+    num_rows=10, key='-TABLE-',
+    row_height=35)]]
+    
+    window = sg.Window("Data Frame", layout, modal=True, resizable=True)
+    choice = None
+    while True:
+        event, values = window.read()
+        if event == "Exit" or event == sg.WIN_CLOSED:
+            break
+        
+
+def machine_learning(df, keywords): # Open window for machine learning
+    df['Tweet'] = df['Tweet'].apply(clean_text)  # Cleaning of tweets
+    df = data_read_clean(df)  # Read data from csv and drop duplicates from column "Tweet"
+    layout = [[sg.Text("\n W2Vec / Logistic Regression Model Used:\n ", font=('_20'))], 
+    [sg.DD(similar_list, key = "positive_negative", size=(10,10)),sg.Button("Similar Words")],
+    [sg.Button("Confusion Matrix")]]
+
+    window = sg.Window("Machine Learning", layout, modal=True, size=(600,200)) # Unable to interact with main window until you close second window
+    while True:
+        event, values = window.read()
+        if event == "Exit" or event == sg.WIN_CLOSED:
+            break
+
+        elif event == "Similar Words":
+            texts_w2v = df.Tweet.apply(tokenize).to_list()
+            w2v = Word2Vec(sentences = texts_w2v, window = 3, vector_size = 10, min_count = 1, workers = 4, sg = 1)
+            if values["positive_negative"] == "positive":
+                similar_dataframe(w2v.wv.most_similar(positive=keywords))
+            elif values["positive_negative"] == "negative":
+                similar_dataframe(w2v.wv.most_similar(negative=keywords))
+            
+
+date_time = "since:2020-02-01 until:2020-05-01" # Sample date
+list_keyword = ["healthcare", "covid", "nurse", "hospital", "doctor"] # List of keywords
 list_dataframe = ["User", "Date Created", "Number of Likes", "Source of Tweet", "Tweet", "Polarity", "Emotion"] # Headers for the dataframe
 list_yearfrom = ["2019","2020","2021","2022"] # Range of years
 list_monthfrom = ["01","02","03","04","05","06","07","08","09","10","11","12"] # Range of months
+similar_list = ["positive", "negative"]
+word_list = ["Word / Precision"]
 
-layout = [[sg.Text('Please select the Keyword / Date / Amount to scrape from twitter\n\n', font='_25')],
+layout = [[sg.Text('Please select the Keyword / Date / Amount to scrape from twitter\n\n', font='_25')], # Designing buttons and layout
  [sg.Text('Keyword :', font="_15"), sg.DD(list_keyword, key = "key_word", size=(50,50))],
  [sg.Text('Date from :', font='_15'), sg.DD(list_yearfrom, key = "year_start", size=(10,10)), sg.DD(list_monthfrom, key = "month_start", size=(10,10))
  ,sg.Text('    Date Until :', font='_15'), sg.DD(list_yearfrom, key = "year_end", size=(10,10)), sg.DD(list_monthfrom, key = "month_end", size=(10,10))],
 
  [sg.Text('Amount :', font="_15"), sg.InputText(key = "number", size=(20,50))],
     [sg.Exit(), sg.Button("Scrape Data"), sg.Button("Export to CSV")],
-    [sg.Button("Data Analysis"), sg.Button("Data Frame")]]
+    [sg.Button("Data Analysis"), sg.Button("Data Frame"), sg.Button("Machine Learning")]]
 
 
 window = sg.Window("Python Analysis", layout, size=(700,250), resizable=True)
@@ -306,7 +355,7 @@ while True:
         if event in (sg.WINDOW_CLOSED, "Exit"):
             break
         elif event == "Scrape Data": # Scrapes data and stores it in search_data
-            search_data = search_results(int(values["number"]), values["key_word"]+ "since:" + values["year_start"] + "-" + values["month_start"]+ "-" + "01" + 
+            search_data = search_results(int(values["number"]), values["key_word"]+ " since:" + values["year_start"] + "-" + values["month_start"]+ "-" + "01" + 
             " until:" + values["year_end"] + "-" + values["month_end"] + "-" + "01") # Takes user-input for time / keyword and amount
 
             search_data['Polarity'] = search_data['Tweet'].apply(popular)  # Adding new column polarity using VaderSentiment Analysis
@@ -330,6 +379,9 @@ while True:
 
         if event == "Data Frame":
             open_data_frame(search_data) # Function to display data
+
+        if event == "Machine Learning":
+            machine_learning(search_data, values["key_word"])
     except:
         sg.popup_auto_close("Error encountered, please try again") 
 
