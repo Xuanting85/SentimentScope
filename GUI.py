@@ -322,6 +322,10 @@ def open_data_frame(df): # Open window for to view data frame
 def machine_learning(df, keywords): # Open window for machine learning
     df['Tweet'] = df['Tweet'].apply(clean_text)  # Cleaning of tweets
     df = data_read_clean(df)  # Read data from csv and drop duplicates from column "Tweet"
+
+    texts_w2v = df.Tweet.apply(tokenize).to_list() # The use of tokenize function to tokenize the tweets
+    w2v = Word2Vec(sentences = texts_w2v, window = 3, vector_size = 100, min_count = 1, workers = 4, sg = 1) # Defining the Word2Vec Model
+
     layout = [[sg.Text("\n W2Vec / Logistic Regression Model Used:\n ", font=('_20'))], 
     [sg.DD(similar_list, key = "positive_negative", size=(10,10)),sg.Button("Similar Words")],
     [sg.Button("Confusion Matrix")]]
@@ -333,8 +337,6 @@ def machine_learning(df, keywords): # Open window for machine learning
             break
 
         elif event == "Similar Words":
-            texts_w2v = df.Tweet.apply(tokenize).to_list()
-            w2v = Word2Vec(sentences = texts_w2v, window = 3, vector_size = 10, min_count = 1, workers = 4, sg = 1)
             if values["positive_negative"] == "positive":
                 print(w2v.wv.most_similar(positive=keywords))
             elif values["positive_negative"] == "negative":
