@@ -17,6 +17,11 @@ from textblob import TextBlob
 from nltk.corpus import stopwords as sp
 from nltk.tokenize import word_tokenize
 from gensim.models import Word2Vec
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, precision_score, recall_score, confusion_matrix
+import numpy as np
 # nltk.download("punkt")
 # nltk.download('stopwords')
 # Eg how neg or pos a comment this and the compound is the overall 
@@ -113,6 +118,29 @@ def data_read_clean(df): # Perform further data cleaning
 
 def tokenize(d):
     return word_tokenize(d)
+
+
+def plot_confusion_matrix(y_test, y_predicted, title='Confusion Matrix'):
+    cm = confusion_matrix(y_test, y_predicted)
+    plt.figure(figsize=(8,6))
+    sns.heatmap(cm,annot=True, fmt='.20g')
+    plt.title(title)
+    plt.ylabel('True label')
+    plt.xlabel('Predicted label')
+    plt.show()
+
+
+def get_avg_vector(sent):
+    vector = np.zeros(100)
+    total_words = 0
+    for word in sent.split():        
+        if word in w2v.wv.index_to_key:
+            vector += w2v.wv.word_vec(word)
+            total_words += 1
+    if total_words > 0:
+        return vector / total_words
+    else:
+        return vector
 
 # Functions below perform visualization with different charts / graphs
 
@@ -291,22 +319,6 @@ def open_data_frame(df): # Open window for to view data frame
     window.close()
 
 
-def similar_dataframe(lst):
-    print(lst)
-    layout = [[sg.Text("Similar Words")],
-    [sg.Table(values=lst, headings=word_list, max_col_width=35,
-    auto_size_columns=True,display_row_numbers=True,justification="right",
-    num_rows=10, key='-TABLE-',
-    row_height=35)]]
-    
-    window = sg.Window("Data Frame", layout, modal=True, resizable=True)
-    choice = None
-    while True:
-        event, values = window.read()
-        if event == "Exit" or event == sg.WIN_CLOSED:
-            break
-        
-
 def machine_learning(df, keywords): # Open window for machine learning
     df['Tweet'] = df['Tweet'].apply(clean_text)  # Cleaning of tweets
     df = data_read_clean(df)  # Read data from csv and drop duplicates from column "Tweet"
@@ -324,9 +336,22 @@ def machine_learning(df, keywords): # Open window for machine learning
             texts_w2v = df.Tweet.apply(tokenize).to_list()
             w2v = Word2Vec(sentences = texts_w2v, window = 3, vector_size = 10, min_count = 1, workers = 4, sg = 1)
             if values["positive_negative"] == "positive":
-                similar_dataframe(w2v.wv.most_similar(positive=keywords))
+                print(w2v.wv.most_similar(positive=keywords))
             elif values["positive_negative"] == "negative":
-                similar_dataframe(w2v.wv.most_similar(negative=keywords))
+                print(w2v.wv.most_similar(negative=keywords))
+
+        elif event == "Confusion Matrix":
+            X = df.Tweet
+            y = df.Emotion
+            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, random_state = 4)
+            df['w2v_vector'] = df['Tweet'].map(get_avg_vector)
+            word2vec_X = df['w2v_vector']
+            y = df['Tweet']
+            X_train_word2vec, X_test_word2vec, y_train_word2vec, y_test_word2vec = train_test_split(word2vec_X, y,test_size = 0.2, random_state = 4)
+            word2vec_lr = LogisticRegression(random_state=42,solver = 'liblinear')
+            word2vec_lr.fit(np.stack(X_train_word2vec), y_train_word2vec)
+            y_predicted_word2vec_lr = word2vec_lr.predict(np.stack(X_test_word2vec))
+            plot_confusion_matrix(y_test, y_predicted_word2vec_lr)
             
 
 date_time = "since:2020-02-01 until:2020-05-01" # Sample date
