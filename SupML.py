@@ -91,8 +91,8 @@ def tokenize(d):
 texts_w2v = df.Tweet.apply(tokenize).to_list()
 
 w2v = Word2Vec(sentences = texts_w2v, window = 3, vector_size = 100, min_count = 5, workers = 4, sg = 1)
-#print(w2v.wv.doesnt_match("healthy covid fever sick".split())) # works
-#print(w2v.wv.most_similar('sick')) # works
+print(w2v.wv.doesnt_match("healthy covid fever sick".split())) # works
+print(w2v.wv.most_similar('sick')) # works
 
 def get_avg_vector(sent):
     vector = np.zeros(100)
@@ -116,5 +116,3 @@ X_train_word2vec, X_test_word2vec, y_train_word2vec, y_test_word2vec = train_tes
 word2vec_lr = LogisticRegression(random_state=42,solver = 'liblinear')
 word2vec_lr.fit(np.stack(X_train_word2vec), y_train_word2vec)
 y_predicted_word2vec_lr = word2vec_lr.predict(np.stack(X_test_word2vec))
-#score_metrics(y_test, y_predicted_word2vec_lr)
-#plot_confusion_matrix(y_test, y_predicted_word2vec_lr)
