@@ -18,10 +18,10 @@ from nltk.corpus import stopwords as sp
 from nltk.tokenize import word_tokenize
 from gensim.models import Word2Vec
 from sklearn.model_selection import train_test_split
-from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, precision_score, recall_score, confusion_matrix
 import numpy as np
+from functools import partial
 # nltk.download("punkt")
 # nltk.download('stopwords')
 # Eg how neg or pos a comment this and the compound is the overall 
@@ -91,7 +91,7 @@ def clear_csv(file):
     f.truncate()
     f.close()
 
-# The analysis available are piechart / histogram / wordcloud / kernal graph / time graph / scatterplot 
+# Updating the dataframe with subjectivity and polarity with textblob
 
 def getSubjectivity(text): # Returns the subjectivity from the library textblob
     return TextBlob(text).sentiment.subjectivity
@@ -115,6 +115,7 @@ def data_read_clean(df): # Perform further data cleaning
 
     return df
 
+# Machine Learning Functions
 
 def tokenize(d):
     return word_tokenize(d)
@@ -130,19 +131,19 @@ def plot_confusion_matrix(y_test, y_predicted, title='Confusion Matrix'):
     plt.show()
 
 
-def get_avg_vector(sent):
+def get_avg_vector(sent, w):
     vector = np.zeros(100)
     total_words = 0
     for word in sent.split():        
-        if word in w2v.wv.index_to_key:
-            vector += w2v.wv.word_vec(word)
+        if word in w.wv.index_to_key:
+            vector += w.wv.word_vec(word)
             total_words += 1
     if total_words > 0:
         return vector / total_words
     else:
         return vector
 
-# Functions below perform visualization with different charts / graphs
+# Visualizations with different charts / graphs
 
 def pie_chart(df):     # Creates a pie chart to count % of each emotion
     emotions = df['Emotion'].value_counts()
@@ -302,7 +303,6 @@ def open_data_window(df): # Open window for data analysis
 
 def open_data_frame(df): # Open window for to view data frame
     data_list = df.values.tolist() # Converting data frame back to list
-    print(data_list)
     layout = [[sg.Text("Scraped Data Frame")],
     [sg.Table(values=data_list, headings=list_dataframe, max_col_width=35,
     auto_size_columns=True,display_row_numbers=True,justification="right",
@@ -319,14 +319,39 @@ def open_data_frame(df): # Open window for to view data frame
     window.close()
 
 
+def similar_words_frame(lst): # Display the words that the model has determined to be similar
+    df2 = pd.DataFrame(lst, columns = ['Words', 'Precision'])
+    pos_lists = df2.values.tolist()
+    layout = [[sg.Text("Scraped Data Frame")],
+    [sg.Table(values=pos_lists, headings=similar_words, max_col_width=35,
+    auto_size_columns=True,display_row_numbers=True,justification="right",
+    num_rows=10, key='-TABLE-',
+    row_height=35)]]
+    
+    window = sg.Window("Data Frame", layout, modal=True, resizable=True)
+    choice = None
+    while True:
+        event, values = window.read()
+        if event == "Exit" or event == sg.WIN_CLOSED:
+            break
+        
+    window.close()
+
+
 def machine_learning(df, keywords): # Open window for machine learning
     df['Tweet'] = df['Tweet'].apply(clean_text)  # Cleaning of tweets
     df = data_read_clean(df)  # Read data from csv and drop duplicates from column "Tweet"
 
+    X = df.Tweet
+    y = df.Emotion
+  
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, random_state = 4)
     texts_w2v = df.Tweet.apply(tokenize).to_list() # The use of tokenize function to tokenize the tweets
     w2v = Word2Vec(sentences = texts_w2v, window = 3, vector_size = 100, min_count = 1, workers = 4, sg = 1) # Defining the Word2Vec Model
 
-    layout = [[sg.Text("\n W2Vec / Logistic Regression Model Used:\n ", font=('_20'))], 
+    
+
+    layout = [[sg.Text("W2Vec / Logistic Regression Model Used:\n ", font=('_20'))], 
     [sg.DD(similar_list, key = "positive_negative", size=(10,10)),sg.Button("Similar Words")],
     [sg.Button("Confusion Matrix")]]
 
@@ -338,15 +363,13 @@ def machine_learning(df, keywords): # Open window for machine learning
 
         elif event == "Similar Words":
             if values["positive_negative"] == "positive":
-                print(w2v.wv.most_similar(positive=keywords))
+                similar_words_frame(w2v.wv.most_similar(positive=keywords))
             elif values["positive_negative"] == "negative":
-                print(w2v.wv.most_similar(negative=keywords))
+                similar_words_frame(w2v.wv.most_similar(negative=keywords))
 
         elif event == "Confusion Matrix":
-            X = df.Tweet
-            y = df.Emotion
-            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, random_state = 4)
-            df['w2v_vector'] = df['Tweet'].map(get_avg_vector)
+            # df['w2v_vector'] = df['Tweet'].map(get_avg_vector())
+            df['w2v_vector'] = list(map(lambda sent: get_avg_vector(sent, w=w2v), df['Tweet'])) # Apply get_avg_vector function to df
             word2vec_X = df['w2v_vector']
             y = df['Tweet']
             X_train_word2vec, X_test_word2vec, y_train_word2vec, y_test_word2vec = train_test_split(word2vec_X, y,test_size = 0.2, random_state = 4)
@@ -362,7 +385,7 @@ list_dataframe = ["User", "Date Created", "Number of Likes", "Source of Tweet", 
 list_yearfrom = ["2019","2020","2021","2022"] # Range of years
 list_monthfrom = ["01","02","03","04","05","06","07","08","09","10","11","12"] # Range of months
 similar_list = ["positive", "negative"]
-word_list = ["Word / Precision"]
+similar_words = ["Word", "Precision"]
 
 layout = [[sg.Text('Please select the Keyword / Date / Amount to scrape from twitter\n\n', font='_25')], # Designing buttons and layout
  [sg.Text('Keyword :', font="_15"), sg.DD(list_keyword, key = "key_word", size=(50,50))],
@@ -374,7 +397,7 @@ layout = [[sg.Text('Please select the Keyword / Date / Amount to scrape from twi
     [sg.Button("Data Analysis"), sg.Button("Data Frame"), sg.Button("Machine Learning")]]
 
 
-window = sg.Window("Python Analysis", layout, size=(700,250), resizable=True)
+window = sg.Window("Python Analysis", layout, size=(700,280), resizable=True)
 
 while True:
     try:
