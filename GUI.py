@@ -22,6 +22,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, precision_score, recall_score, confusion_matrix
 import numpy as np
 from functools import partial
+from sklearn.metrics import accuracy_score
 # nltk.download("punkt")
 # nltk.download('stopwords')
 # Eg how neg or pos a comment this and the compound is the overall 
@@ -143,6 +144,14 @@ def get_avg_vector(sent, w):
     else:
         return vector
 
+
+def score_metrics(y_test, y_predicted): 
+    accuracy = accuracy_score(y_test, y_predicted) 
+    precision = precision_score(y_test, y_predicted,average= 'macro') 
+    recall = recall_score(y_test, y_predicted,average='macro') 
+    print("accuracy = %0.3f, precision = %0.3f, recall = %0.3f" % (accuracy, precision, recall)) 
+
+    
 # Visualizations with different charts / graphs
 
 def pie_chart(df):     # Creates a pie chart to count % of each emotion
@@ -347,7 +356,7 @@ def machine_learning(df, keywords): # Open window for machine learning
   
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, random_state = 4)
     texts_w2v = df.Tweet.apply(tokenize).to_list() # The use of tokenize function to tokenize the tweets
-    w2v = Word2Vec(sentences = texts_w2v, window = 3, vector_size = 100, min_count = 1, workers = 4, sg = 1) # Defining the Word2Vec Model
+    w2v = Word2Vec(sentences = texts_w2v, window = 3, vector_size = 100, min_count = 5, workers = 4, sg = 1) # Defining the Word2Vec Model
 
     
 
@@ -371,9 +380,9 @@ def machine_learning(df, keywords): # Open window for machine learning
             # df['w2v_vector'] = df['Tweet'].map(get_avg_vector())
             df['w2v_vector'] = list(map(lambda sent: get_avg_vector(sent, w=w2v), df['Tweet'])) # Apply get_avg_vector function to df
             word2vec_X = df['w2v_vector']
-            y = df['Tweet']
-            X_train_word2vec, X_test_word2vec, y_train_word2vec, y_test_word2vec = train_test_split(word2vec_X, y,test_size = 0.2, random_state = 4)
-            word2vec_lr = LogisticRegression(random_state=42,solver = 'liblinear')
+            y = df['Emotion']
+            X_train_word2vec, X_test_word2vec, y_train_word2vec, y_test_word2vec = train_test_split(word2vec_X, y,test_size = 0.2)
+            word2vec_lr = LogisticRegression(random_state=42,solver = "liblinear")
             word2vec_lr.fit(np.stack(X_train_word2vec), y_train_word2vec)
             y_predicted_word2vec_lr = word2vec_lr.predict(np.stack(X_test_word2vec))
             plot_confusion_matrix(y_test, y_predicted_word2vec_lr)
