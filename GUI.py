@@ -380,9 +380,9 @@ def machine_learning(df, keywords): # Open window for machine learning
             
 
 date_time = "since:2020-02-01 until:2020-05-01" # Sample date
-list_keyword = ["covid", "covid19" "doctor", "healthcare", "healthcaresystem", "healthcareworkers", "hospital", "nurse", "pandemic"] # List of keywords
+list_keyword = ["covid", "covid19" "doctor", "healthcare", "healthcaresystem", "healthcareworker", "hospital", "nurse", "pandemic"] # List of keywords
 list_dataframe = ["User", "Date Created", "Number of Likes", "Source of Tweet", "Tweet", "Polarity", "Emotion"] # Headers for the dataframe
-list_yearfrom = ["2020","2021","2022"] # Range of years
+list_yearfrom = ["2019","2020","2021","2022"] # Range of years
 list_monthfrom = ["01","02","03","04","05","06","07","08","09","10","11","12"] # Range of months
 similar_list = ["positive", "negative"]
 similar_words = ["Word", "Precision"]

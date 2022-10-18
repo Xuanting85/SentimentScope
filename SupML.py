@@ -1,8 +1,8 @@
+# importing libraries needed for ML
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-# %matplotlib inline
 
 import warnings
 warnings.filterwarnings('ignore')
@@ -38,7 +38,6 @@ from keras.callbacks import EarlyStopping
 
 
 df = pd.read_csv('data.csv')  # Read data from csv
-#print(df['Tweet'])
 import re
 import nltk
 from nltk.corpus import stopwords
@@ -46,6 +45,7 @@ nltk.download('stopwords')
 from nltk.tokenize import word_tokenize
 nltk.download('punkt')
 
+#TF-IDF Method
 
 X = df.Tweet
 y = df.Emotion
@@ -80,9 +80,39 @@ def plot_confusion_matrix(y_test, y_predicted, title='Confusion Matrix'):
     plt.title(title)
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
+    plt.show()
 
 plot_confusion_matrix(y_test, y_predicted_lr)
 
+## Word2Vec Method
+def tokenize(d):
+    return word_tokenize(d)
 
-w2v = Word2Vec(sentences = np.array(df).tolist(), window = 3, vector_size = 100, min_count = 5, workers = 4, sg = 1)
-w2v.wv.most_similar('how')
+texts_w2v = df.Tweet.apply(tokenize).to_list()
+
+w2v = Word2Vec(sentences = texts_w2v, window = 3, vector_size = 100, min_count = 5, workers = 4, sg = 1)
+print(w2v.wv.doesnt_match("healthy covid fever sick".split())) # works
+print(w2v.wv.most_similar('sick')) # works
+
+def get_avg_vector(sent):
+    vector = np.zeros(100)
+    total_words = 0
+    for word in sent.split():        
+        if word in w2v.wv.index_to_key:
+            vector += w2v.wv.word_vec(word)
+            total_words += 1
+    if total_words > 0:
+        return vector / total_words
+    else:
+        return vector
+    
+df['w2v_vector'] = df['Tweet'].map(get_avg_vector)
+#print(df[['Tweet', 'w2v_vector']].head(2))
+
+word2vec_X = df['w2v_vector']
+y = df['Tweet']
+
+X_train_word2vec, X_test_word2vec, y_train_word2vec, y_test_word2vec = train_test_split(word2vec_X, y,test_size = 0.2, random_state = 4)
+word2vec_lr = LogisticRegression(random_state=42,solver = 'liblinear')
+word2vec_lr.fit(np.stack(X_train_word2vec), y_train_word2vec)
+y_predicted_word2vec_lr = word2vec_lr.predict(np.stack(X_test_word2vec))
