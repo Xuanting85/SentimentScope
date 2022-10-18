@@ -159,7 +159,7 @@ def pie_chart(df):     # Creates a pie chart to count % of each emotion
     emotions = df['Emotion'].value_counts().rename_axis('Emotion').reset_index(name = 'counts')
     wp={'linewidth':1, 'edgecolor': 'black'}
     explode = (0.1,0.1,0.1)
-    colors = ({"Positive" : "Green", "Negative": "red", "Neutral" :"Blue"})
+    colors = ({"Positive" : "green", "Negative": "red", "Neutral" :"blue"})
     emotions.set_index('Emotion').plot(kind='pie', y='counts', figsize=(6, 6), autopct = '%1.0f%%', shadow = True, wedgeprops = wp, explode = explode, label = ''
     , colors=[colors[c] for c in emotions["Emotion"]])
     plt.title("Polarity Distribution")
@@ -167,11 +167,10 @@ def pie_chart(df):     # Creates a pie chart to count % of each emotion
 
     
 def histo(df): # Creates a histogram based on the number of likes for each tweet
-    fig = px.histogram(df, x="Emotion", y ="Number of Likes", title="Number of likes for each emotion", width=1200, height=1000) # Takes data from the column "Number of Likes"
-    fig.update_traces(textfont_size = 100,
-                    marker_line_width=1, marker_color = ["green", "red", "blue"])
-    fig.show()
-
+    df.groupby('Emotion')['Number of Likes'].sum().plot(kind='bar', figsize=(6, 6), color = ["red","blue","green"])
+    plt.title("Number of Likes for each Emotion")
+    plt.show()
+    
 
 def wordcloud(tweet, title, col): # Creating a wordcloud with different emotions
     # image = np.array(Image.open('hashtag.png'))

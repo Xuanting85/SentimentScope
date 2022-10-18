@@ -40,20 +40,24 @@ def data_read_clean(df):
 # Functions below perform visualization with different charts / graphs
 
 def pie_chart(df):     # Creates a pie chart to count % of each emotion
-    emotions = df['Emotion'].value_counts()
-    wp={'linewidth':2, 'edgecolor': 'black'}
+    emotions = df['Emotion'].value_counts().rename_axis('Emotion').reset_index(name = 'counts')
+    wp={'linewidth':1, 'edgecolor': 'black'}
     explode = (0.1,0.1,0.1)
-    pd.Series(emotions).plot.pie(y=emotions, subplots=True, figsize=(5,5),colors=['green','red','blue'], autopct='%1.0f%%',shadow = True, wedgeprops=wp
-    ,explode = explode, label='')
+    colors = ({"Positive" : "Green", "Negative": "red", "Neutral" :"Blue"})
+    emotions.set_index('Emotion').plot(kind='pie', y='counts', figsize=(6, 6), autopct = '%1.0f%%', shadow = True, wedgeprops = wp, explode = explode, label = ''
+    , colors=[colors[c] for c in emotions["Emotion"]])
     plt.title("Polarity Distribution")
     plt.show()
 
     
 def histo(df): # Creates a histogram based on the number of likes for each tweet
-    fig = px.histogram(df, x="Emotion", y ="Number of Likes", title="Number of likes for each emotion", width=1200, height=1000) # Takes data from the column "Number of Likes"
-    fig.update_traces(textfont_size = 100,
-                    marker_line_width=1, marker_color=["green", "red", "blue"])
-    fig.show()
+    df.groupby('Emotion')['Number of Likes'].sum().plot(kind='bar', figsize=(6, 6), color = ["red","blue","green"])
+    plt.title("Number of Likes for each Emotion")
+    plt.show()
+    # fig = px.histogram(df, x="Emotion", y ="Number of Likes", title="Number of likes for each emotion", width=1200, height=1000) # Takes data from the column "Number of Likes"
+    # fig.update_traces(textfont_size = 100,
+    #                 marker_line_width=1, marker_color=["green", "red", "blue"])
+    # fig.show()
 
 
 def wordcloud(tweet, title, col): # Creating a wordcloud with different emotions
@@ -92,7 +96,9 @@ def time_bar(start, end, df): # Graph to show sentiments over time
     df2 = df.loc[mask]
     grouping = df2.groupby(by='Date Created')['Emotion'].value_counts()
     unstack_graph = grouping.unstack(level=1)
-    unstack_graph.plot.bar()
+    print(unstack_graph)
+    pd.DataFrame(unstack_graph).plot.bar(color={'Positive': 'green','Negative': 'red','Neutral': 'blue'})
+    plt.title("Count of Likes by Emotion")
     plt.show()
 
 
@@ -145,9 +151,9 @@ def most_common(df): # Barplot to show the count of popular words
 df = data_read_clean(pd.read_csv('data.csv'))  # Read data from csv and drop duplicates from column "Tweet"
 
 
-pie_chart(df)
+# pie_chart(df)
 
-# histo(df)
+histo(df)
 
 # kernal_graph(df)
 
@@ -159,7 +165,7 @@ def_neutral = df.loc[df['Emotion'] == "Neutral"] # Selecting columns with neutra
 # wordcloud_n = wordcloud(df_negative, "Negative Word Cloud", "Reds")
 # wordcloud_neu = wordcloud(def_neutral, "Neutral Word Cloud", "Blues")
 
-# time_bar('2019-11-12','2019-11-21', df)
+# time_bar('2019-01-01','2020-01-01', df)
 
 # scatter_plot(df)
 
