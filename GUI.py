@@ -156,11 +156,12 @@ def score_metrics(y_test, y_predicted):
 # Visualizations with different charts / graphs
 
 def pie_chart(df):     # Creates a pie chart to count % of each emotion
-    emotions = df['Emotion'].value_counts()
-    wp={'linewidth':2, 'edgecolor': 'black'}
+    emotions = df['Emotion'].value_counts().rename_axis('Emotion').reset_index(name = 'counts')
+    wp={'linewidth':1, 'edgecolor': 'black'}
     explode = (0.1,0.1,0.1)
-    pd.Series(emotions).plot.pie(y=emotions, subplots=True, figsize=(5,5),colors=["green","red","blue"], autopct='%1.0f%%',shadow = True, wedgeprops=wp
-    ,explode = explode, label='')
+    colors = ({"Positive" : "Green", "Negative": "red", "Neutral" :"Blue"})
+    emotions.set_index('Emotion').plot(kind='pie', y='counts', figsize=(6, 6), autopct = '%1.0f%%', shadow = True, wedgeprops = wp, explode = explode, label = ''
+    , colors=[colors[c] for c in emotions["Emotion"]])
     plt.title("Polarity Distribution")
     plt.show()
 
