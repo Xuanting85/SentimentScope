@@ -126,6 +126,7 @@ def plot_confusion_matrix(y_test, y_predicted, title='Confusion Matrix'):
     cm = confusion_matrix(y_test, y_predicted)
     plt.figure(figsize=(8,6))
     sns.heatmap(cm,annot=True, fmt='.20g')
+    print('Accuracy: %.3f' % accuracy_score(y_test, y_predicted))
     plt.title(title)
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
@@ -158,7 +159,7 @@ def pie_chart(df):     # Creates a pie chart to count % of each emotion
     emotions = df['Emotion'].value_counts()
     wp={'linewidth':2, 'edgecolor': 'black'}
     explode = (0.1,0.1,0.1)
-    emotions.plot.pie(y=emotions, subplots=True, figsize=(5,5),colors=['green','red','blue'], autopct='%1.0f%%',shadow = True, wedgeprops=wp
+    pd.Series(emotions).plot.pie(y=emotions, subplots=True, figsize=(5,5),colors=["green","red","blue"], autopct='%1.0f%%',shadow = True, wedgeprops=wp
     ,explode = explode, label='')
     plt.title("Polarity Distribution")
     plt.show()
@@ -167,7 +168,7 @@ def pie_chart(df):     # Creates a pie chart to count % of each emotion
 def histo(df): # Creates a histogram based on the number of likes for each tweet
     fig = px.histogram(df, x="Emotion", y ="Number of Likes", title="Number of likes for each emotion", width=1200, height=1000) # Takes data from the column "Number of Likes"
     fig.update_traces(textfont_size = 100,
-                    marker_line_width=1, marker_color=["blue", "red", "green"])
+                    marker_line_width=1, marker_color = ["green", "red", "blue"])
     fig.show()
 
 
@@ -189,8 +190,8 @@ def kernal_graph(df):# Kernal distribution graph
     num_pos = df[df['Emotion']=='Positive']['Tweet'].apply(lambda x: len(x.split()))
     plt.figure(figsize=(12,6))
     sns.kdeplot(num_neg, fill=True, color = 'r').set_title('Distribution of number of words')
-    sns.kdeplot(num_neu, fill=True, color = 'y')
-    sns.kdeplot(num_pos, fill=True, color = 'b')
+    sns.kdeplot(num_neu, fill=True, color = 'b')
+    sns.kdeplot(num_pos, fill=True, color = 'g')
 
     plt.legend(labels=['Negative', 'Neutral','Positive'])
     plt.show()
@@ -205,12 +206,14 @@ def time_bar(start, end, df): # Graph to show sentiments over time
     df2 = df.loc[mask]
     grouping = df2.groupby(by='Date Created')['Emotion'].value_counts()
     unstack_graph = grouping.unstack(level=1)
-    unstack_graph.plot.bar()
+    pd.DataFrame(unstack_graph).plot.bar(color={'Positive': 'green','Negative': 'red','Neutral': 'blue'})
+    plt.title("Count of Likes by Emotion")
     plt.show()
 
 
 def scatter_plot(df): # Scatter plot between subjectivity & polarity
     df.plot.scatter(x="Polarity", y="Subjectivity", c="DarkBlue", colormap="viridis")
+    plt.title("Relationship between Subjectivity and Polarity")
     plt.show()
     
 
@@ -362,7 +365,8 @@ def machine_learning(df, keywords): # Open window for machine learning
 
     layout = [[sg.Text("W2Vec / Logistic Regression Model Used:\n ", font=('_20'))], 
     [sg.DD(similar_list, key = "positive_negative", size=(10,10)),sg.Button("Similar Words")],
-    [sg.Button("Confusion Matrix")]]
+    [sg.Button("Confusion Matrix")],
+    [sg.Text("Accuracy of Model is printed in the terminal", font=('_5'))]]
 
     window = sg.Window("Machine Learning", layout, modal=True, size=(600,200)) # Unable to interact with main window until you close second window
     while True:
@@ -414,7 +418,7 @@ while True:
         if event in (sg.WINDOW_CLOSED, "Exit"):
             break
         elif event == "Scrape Data": # Scrapes data and stores it in search_data
-            search_data = search_results(int(values["number"]), values["key_word"]+ " since:" + values["year_start"] + "-" + values["month_start"]+ "-" + "01" + 
+            search_data = search_results(int(values["number"]), values["key_word"]+ " near:'Singapore'" + " since:" + values["year_start"] + "-" + values["month_start"]+ "-" + "01" + 
             " until:" + values["year_end"] + "-" + values["month_end"] + "-" + "01") # Takes user-input for time / keyword and amount
 
             search_data['Polarity'] = search_data['Tweet'].apply(popular)  # Adding new column polarity using VaderSentiment Analysis

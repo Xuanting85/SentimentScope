@@ -43,7 +43,7 @@ def pie_chart(df):     # Creates a pie chart to count % of each emotion
     emotions = df['Emotion'].value_counts()
     wp={'linewidth':2, 'edgecolor': 'black'}
     explode = (0.1,0.1,0.1)
-    emotions.plot.pie(y=emotions, subplots=True, figsize=(5,5),colors=['green','red','blue'], autopct='%1.0f%%',shadow = True, wedgeprops=wp
+    pd.Series(emotions).plot.pie(y=emotions, subplots=True, figsize=(5,5),colors=['green','red','blue'], autopct='%1.0f%%',shadow = True, wedgeprops=wp
     ,explode = explode, label='')
     plt.title("Polarity Distribution")
     plt.show()
@@ -145,7 +145,7 @@ def most_common(df): # Barplot to show the count of popular words
 df = data_read_clean(pd.read_csv('data.csv'))  # Read data from csv and drop duplicates from column "Tweet"
 
 
-# pie_chart(df)
+pie_chart(df)
 
 # histo(df)
 
