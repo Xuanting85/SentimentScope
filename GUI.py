@@ -391,7 +391,7 @@ def machine_learning(df, keywords): # Open window for machine learning
 date_time = "since:2020-02-01 until:2020-05-01" # Sample date
 list_keyword = ["healthcare", "covid", "nurse", "hospital", "doctor"] # List of keywords
 list_dataframe = ["User", "Date Created", "Number of Likes", "Source of Tweet", "Tweet", "Polarity", "Emotion"] # Headers for the dataframe
-list_yearfrom = ["2019","2020","2021","2022"] # Range of years
+list_yearfrom = ["2020","2021","2022"] # Range of years
 list_monthfrom = ["01","02","03","04","05","06","07","08","09","10","11","12"] # Range of months
 similar_list = ["positive", "negative"]
 similar_words = ["Word", "Precision"]
@@ -402,8 +402,8 @@ layout = [[sg.Text('Please select the Keyword / Date / Amount to scrape from twi
  ,sg.Text('    Date Until :', font='_15'), sg.DD(list_yearfrom, key = "year_end", size=(10,10)), sg.DD(list_monthfrom, key = "month_end", size=(10,10))],
 
  [sg.Text('Amount :', font="_15"), sg.InputText(key = "number", size=(20,50))],
-    [sg.Exit(), sg.Button("Scrape Data"), sg.Button("Export to CSV")],
-    [sg.Button("Data Analysis"), sg.Button("Data Frame"), sg.Button("Machine Learning")]]
+    [sg.Button("Scrape Data"), sg.Button("Export to CSV")],
+    [sg.Button("Data Analysis"), sg.Button("Data Frame"), sg.Button("Machine Learning"), sg.Exit()]]
 
 
 window = sg.Window("Python Analysis", layout, size=(700,280), resizable=True)
